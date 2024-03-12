@@ -10,9 +10,9 @@ import java.util.regex.Pattern;
 import ij.process.StackStatistics;
 
 // Retrieve previous input and output directories from preferences
-String prevInputDirectory = Prefs.get("combine_amira_tifs.inputDirectory", IJ.getDirectory("current"));
-String prevOutputDirectory = Prefs.get("combine_amira_tifs.outputDirectory", IJ.getDirectory("current"));
-String prevFilePattern = Prefs.get("combine_amira_tifs.filePattern", "crop\\d+_labels_\\d+\\_.*\\.tif");
+String prevInputDirectory = Prefs.get("Combine_Amira_Tifs.inputDirectory", IJ.getDirectory("current"));
+String prevOutputDirectory = Prefs.get("Combine_Amira_Tifs.outputDirectory", IJ.getDirectory("current"));
+String prevFilePattern = Prefs.get("Combine_Amira_Tifs.filePattern", "crop\\d+_labels_\\d+\\_.*\\.tif");
 
 // Create a GenericDialogPlus for user input
 GenericDialogPlus gd = new GenericDialogPlus("Input and Output Directories");
@@ -39,9 +39,9 @@ if (gd.wasCanceled()) {
     }
 
     // Save the current input and output directories to preferences
-    Prefs.set("combine_amira_tifs.inputDirectory", inputDirectory);
-    Prefs.set("combine_amira_tifs.outputDirectory", outputDirectory);
-    Prefs.set("combine_amira_tifs.filePattern", filePattern);
+    Prefs.set("Combine_Amira_Tifs.inputDirectory", inputDirectory);
+    Prefs.set("Combine_Amira_Tifs.outputDirectory", outputDirectory);
+    Prefs.set("Combine_Amira_Tifs.filePattern", filePattern);
 
     // Append a trailing slash if necessary and ensure compatibility with different operating systems
     inputDirectory = inputDirectory.endsWith(File.separator) ? inputDirectory : inputDirectory + File.separator;
