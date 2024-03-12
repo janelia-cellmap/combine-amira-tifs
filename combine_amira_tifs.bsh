@@ -1,0 +1,116 @@
+import fiji.util.gui.GenericDialogPlus;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.Prefs;
+import ij.io.FileSaver;
+import ij.plugin.ImageCalculator;
+import ij.process.ImageProcessor;
+import java.io.File;
+import java.util.regex.Pattern;
+import ij.process.StackStatistics;
+
+// Retrieve previous input and output directories from preferences
+String prevInputDirectory = Prefs.get("combine_amira_tifs.inputDirectory", IJ.getDirectory("current"));
+String prevOutputDirectory = Prefs.get("combine_amira_tifs.outputDirectory", IJ.getDirectory("current"));
+String prevFilePattern = Prefs.get("combine_amira_tifs.filePattern", "crop\\d+_labels_\\d+\\_.*\\.tif");
+
+// Create a GenericDialogPlus for user input
+GenericDialogPlus gd = new GenericDialogPlus("Input and Output Directories");
+gd.addDirectoryField("Input Directory: ", prevInputDirectory, 70);
+gd.addDirectoryField("Output Directory: ", prevOutputDirectory, 70);
+gd.addStringField("File Pattern: ", prevFilePattern, 35);
+gd.showDialog();
+
+if (gd.wasCanceled()) {
+    IJ.log("User canceled the operation");
+} else {
+    // Get user input for input and output directories
+    String inputDirectory = gd.getNextString();
+    String outputDirectory = gd.getNextString();
+    String filePattern = gd.getNextString();
+
+    // Use File.openDialog to allow users to select directories if needed
+    if (inputDirectory.equals("")) {
+        inputDirectory = IJ.getDirectory("Select Input Directory: ");
+    }
+
+    if (outputDirectory.equals("")) {
+        outputDirectory = IJ.getDirectory("Select Output Directory: ");
+    }
+
+    // Save the current input and output directories to preferences
+    Prefs.set("combine_amira_tifs.inputDirectory", inputDirectory);
+    Prefs.set("combine_amira_tifs.outputDirectory", outputDirectory);
+    Prefs.set("combine_amira_tifs.filePattern", filePattern);
+
+    // Append a trailing slash if necessary and ensure compatibility with different operating systems
+    inputDirectory = inputDirectory.endsWith(File.separator) ? inputDirectory : inputDirectory + File.separator;
+    outputDirectory = outputDirectory.endsWith(File.separator) ? outputDirectory : outputDirectory + File.separator;
+
+    // Define the output image
+    ImagePlus output = null;
+
+    // Get the list of files in the input directory
+    File[] files = new File(inputDirectory).listFiles();
+    Arrays.sort(files);
+    if (files != null && files.length > 0) {
+        // Compile the regex pattern
+        Pattern pattern = Pattern.compile(filePattern);
+
+        // Calculate the total number of valid files
+        int totalValidFiles = 0;
+        for (File file : files) {
+            if (pattern.matcher(file.getName()).matches()) {
+                totalValidFiles++;
+            }
+        }
+        int processedFiles = 0;
+
+        for (File file : files) {
+            // Check if the file name matches the regex pattern
+            if (pattern.matcher(file.getName()).matches()) {
+            	// Log the progress
+                IJ.log("Processing file " + processedFiles + " of " + totalValidFiles + ": " + file.getName());
+                
+                // Load image        
+                ImagePlus currentImage = IJ.openImage(file.getAbsolutePath());
+				IJ.run(currentImage, "16-bit", "");
+                
+                if (output == null) {
+                    // Initialize output with the first image
+                    output = currentImage.duplicate();	
+                } else {
+                    // Duplicate the current image
+                    ImagePlus binarizedImage = currentImage.duplicate();
+                    IJ.setRawThreshold(binarizedImage, 0, 0); //sets background 0, foreground 255
+                  	IJ.run(binarizedImage, "Convert to Mask", "method=Default,  background=Light black");
+                    IJ.run(binarizedImage, "Invert", "stack"); //now 255 are labeled regions
+                    IJ.run(binarizedImage, "Divide...", "value=" + 255 + " stack");
+                    IJ.run(binarizedImage, "16-bit", "");
+                    
+                    statistics = new ij.process.StackStatistics(output);    
+                    IJ.run(currentImage, "Add...", "value=" + statistics.max + " stack");
+                    
+                    // Multiply the currentImage by the binarizedImage
+                    ImagePlus multipliedImage = ImageCalculator.run(binarizedImage, currentImage, "Multiply create stack");
+                    
+                    // Add the multiplied image to the output
+                    output = ImageCalculator.run(output, multipliedImage, "Add create stack");
+                }
+
+                processedFiles++;
+            }
+        }
+
+        if (output != null) {
+            // Write the output image
+            String outputFile = outputDirectory + "combined_labels.tif";
+            new FileSaver(output).saveAsTiff(outputFile);
+            IJ.log("Operation completed. Output saved to: " + outputFile);
+        } else {
+            IJ.log("No files matching the pattern found in the input directory.");
+        }
+    } else {
+        IJ.log("No files found in the input directory.");
+    }
+}
