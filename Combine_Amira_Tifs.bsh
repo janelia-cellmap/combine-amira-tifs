@@ -83,7 +83,7 @@ if (gd.wasCanceled()) {
                     // Duplicate the current image
                     ImagePlus binarizedImage = currentImage.duplicate();
                     IJ.setRawThreshold(binarizedImage, 0, 0); //sets background 0, foreground 255
-                  	IJ.run(binarizedImage, "Convert to Mask", "method=Default,  background=Light black");
+                  	IJ.run(binarizedImage, "Convert to Mask", "background=Light black");
                     IJ.run(binarizedImage, "Invert", "stack"); //now 255 are labeled regions
                     IJ.run(binarizedImage, "Divide...", "value=" + 255 + " stack");
                     IJ.run(binarizedImage, "16-bit", "");
