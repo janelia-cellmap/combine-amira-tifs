@@ -1,7 +1,7 @@
 # combine-amira-tifs
 Fiji toool to allow combining multiple segmentation tifs into one, while maintaining unique ids for each segmented object. In particular, it is meant for combining 8-bit or 16-bit tifs collected with amira into a single 16 bit image. It does so by sequentially adding images together, but before each sequential image is added, the maximum of the combined image is added to the incoming image.
 
-To use the script, add `combine_amira_tifs.bsh` to your `/Fiji.app/plugins/script` directory.
+To install, download `combine_amira_tifs.bsh`. Then go into Fiji->Plugins->Install, navigate to and select `combine_amira_tifs.bsh`, then restart Fiji. The plugin should now appear in the plugins dropdown as "Combine Amira Tifs"
 
 When you run the script, you will be able to choose the source directory which should contain (but does not need to be limited to) the tifs which you want to combine. You can also select the output directory where you want the combined image saved. 
 
